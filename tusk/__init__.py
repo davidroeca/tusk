@@ -16,7 +16,7 @@ class TuskException(Exception):
 
 
 class Lock(object):
-    def __init__(self, name, dsn=None):
+    def __init__(self, name, dsn=None, blocking=True):
         dsn = dsn or os.environ.get('DATABASE_URL')
         if dsn is None:
             raise ValueError("You must specify a DSN.")
@@ -26,6 +26,7 @@ class Lock(object):
                                      port=params.port)
         self.conn.autocommit = True
         self.key = self._key(name)
+        self.blocking = blocking
 
     @contextmanager
     def cursor(self):
@@ -43,7 +44,9 @@ class Lock(object):
             return -(-(i) & 0xffffffff)
         return i
 
-    def acquire(self, blocking=True, space=-2147483648):
+    def acquire(self, blocking=None, space=-2147483648):
+        if blocking is None:
+            blocking = self.blocking
         with self.cursor() as cursor:
             if blocking:
                 cursor.execute("SELECT pg_advisory_lock(%s, %s);", (space, self.key))
@@ -52,7 +55,11 @@ class Lock(object):
                 cursor.execute("SELECT pg_try_advisory_lock(%s, %s);", (space, self.key))
                 return cursor.fetchone()[0]
 
-    __enter__ = acquire
+    def __enter__(self):
+        result = self.acquire(blocking=self.blocking)
+        if not result:
+            raise RuntimeError("Lock has already been acquired")
+        return result
 
     def release(self, space=-2147483648):
         with self.cursor() as cursor:
