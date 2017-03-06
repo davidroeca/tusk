@@ -20,10 +20,7 @@ class Lock(object):
         dsn = dsn or os.environ.get('DATABASE_URL')
         if dsn is None:
             raise ValueError("You must specify a DSN.")
-        params = urlparse(dsn)
-        self.conn = psycopg2.connect(database=params.path[1:], user=params.username,
-                                     password=params.password, host=params.hostname,
-                                     port=params.port)
+        self.conn = psycopg2.connect(dsn=dsn)
         self.conn.autocommit = True
         self.key = self._key(name)
         self.blocking = blocking
