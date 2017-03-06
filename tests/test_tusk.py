@@ -9,8 +9,8 @@ from tusk import Lock
 class TuskTest(TestCase):
     def setUp(self):
         dsn = os.environ.get("DATABASE_URL")
-        self.former = Lock("tusk", dsn or "postgres://localhost/tusk")
-        self.latter = Lock("tusk", dsn or "postgres://localhost/tusk")
+        self.former = Lock("tusk", dsn or "postgres://localhost/tusk:5432")
+        self.latter = Lock("tusk", dsn or "postgres://localhost/tusk:5432")
 
     def test_acquire_release(self):
         self.former.acquire()

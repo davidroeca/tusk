@@ -1,6 +1,6 @@
 language: python
 env:
-  - DATABASE_URL=postgres://postgres@localhost/tusk
+  - DATABASE_URL=postgres://postgres@localhost/tusk:5432
 python:
   - 2.7
 install: pip install -q tox
